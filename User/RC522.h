@@ -1,14 +1,14 @@
 #include "stm32f10x.h"
 
 
-#define RC522_RESET_PIN                GPIO_Pin_9                /* PB9 */    //   RESET
-#define RC522_RESET_GPIO_PORT          GPIOB                     /* GPIOB */
-#define RC522_RESET_GPIO_CLK           RCC_APB2Periph_GPIOB
-#define RC522_RESET_SET()              GPIO_SetBits(RC522_RESET_GPIO_PORT, RC522_RESET_PIN);      //1
-#define RC522_RESET_RESET()            GPIO_ResetBits(RC522_RESET_GPIO_PORT, RC522_RESET_PIN);    //0
+#define RC522_RESET_PIN                 GPIO_Pin_9                /* PB9 */    //   RESET
+#define RC522_RESET_GPIO_PORT           GPIOB                     /* GPIOB */
+#define RC522_RESET_GPIO_CLK            RCC_APB2Periph_GPIOB
+#define RC522_RESET_SET()               GPIO_SetBits(RC522_RESET_GPIO_PORT, RC522_RESET_PIN);      //1
+#define RC522_RESET_RESET()             GPIO_ResetBits(RC522_RESET_GPIO_PORT, RC522_RESET_PIN);    //0
 
-#define RC522_ENABLE 		GPIO_ResetBits(GPIOA,GPIO_Pin_4)
-#define RC522_DISABLE 	GPIO_SetBits(GPIOA,GPIO_Pin_4)
+#define RC522_ENABLE                    GPIO_ResetBits(GPIOA,GPIO_Pin_4)
+#define RC522_DISABLE                   GPIO_SetBits(GPIOA,GPIO_Pin_4)
 
 
 
@@ -118,44 +118,44 @@
 #define     RFU3C                 0x3C   
 #define     RFU3D                 0x3D   
 #define     RFU3E                 0x3E   
-#define     RFU3F		  0x3F
+#define     RFU3F                 0x3F
 
 /////////////////////////////////////////////////////////////////////
 //和MF522通讯时返回的错误代码
 /////////////////////////////////////////////////////////////////////
-#define MI_OK                          0
-#define MI_NOTAGERR                    1 //(-1)
-#define MI_ERR                         2 //(-2)
+#define MI_OK                     0
+#define MI_NOTAGERR               1 //(-1)
+#define MI_ERR                    2 //(-2)
 
-#define MAXRLEN                       18
+#define MAXRLEN                   18
 
 void RC522_IO_Init(void);
 
 
 
-char PcdRequest(unsigned char req_code,unsigned char *pTagType);
-char PcdAnticoll(unsigned char *pSnr);
-char PcdSelect(unsigned char *pSnr);
-char PcdAuthState(unsigned char auth_mode,unsigned char addr,unsigned char *pKey,unsigned char *pSnr);
-char PcdRead(unsigned char addr,unsigned char *pData);
-char PcdWrite(unsigned char addr,unsigned char *pData);
-char PcdValue(unsigned char dd_mode,unsigned char addr,unsigned char *pValue);
-char PcdBakValue(unsigned char sourceaddr, unsigned char goaladdr);
+char PcdRequest(uint8_t req_code,uint8_t *pTagType);
+char PcdAnticoll(uint8_t *pSnr);
+char PcdSelect(uint8_t *pSnr);
+char PcdAuthState(uint8_t auth_mode,uint8_t addr,uint8_t *pKey,uint8_t *pSnr);
+char PcdRead(uint8_t addr,uint8_t *pData);
+char PcdWrite(uint8_t addr,uint8_t *pData);
+char PcdValue(uint8_t dd_mode,uint8_t addr,uint8_t *pValue);
+char PcdBakValue(uint8_t sourceaddr, uint8_t goaladdr);
 char PcdHalt(void);
-void CalulateCRC(unsigned char *pIndata,unsigned char len,unsigned char *pOutData);
+void CalulateCRC(uint8_t *pIndata,uint8_t len,uint8_t *pOutData);
 char PcdReset(void);
-unsigned char ReadRawRC(unsigned char Address);
-void WriteRawRC(unsigned char Address, unsigned char value);
-void SetBitMask(unsigned char reg,unsigned char mask);
-void ClearBitMask(unsigned char reg,unsigned char mask);
-char PcdComMF522(unsigned char Command, 
-                 unsigned char *pInData, 
-                 unsigned char InLenByte,
-                 unsigned char *pOutData, 
-                 unsigned int  *pOutLenBit);
+uint8_t ReadRawRC(uint8_t Address);
+void WriteRawRC(uint8_t Address, uint8_t value);
+void SetBitMask(uint8_t reg,uint8_t mask);
+void ClearBitMask(uint8_t reg,uint8_t mask);
+char PcdComMF522(uint8_t Command, 
+					uint8_t *pInData, 
+					uint8_t InLenByte,
+					uint8_t *pOutData, 
+					uint32_t  *pOutLenBit);
 void PcdAntennaOn(void);
 void PcdAntennaOff(void);
-void RC522_Config(unsigned char Card_Type);
+void RC522_Config(uint8_t Card_Type);
 
 
 

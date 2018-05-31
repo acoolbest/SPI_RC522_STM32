@@ -105,20 +105,25 @@ void SPI_Configuration(SPI_TypeDef* SPIx)
   */
 int32_t SPI_WriteByte(SPI_TypeDef* SPIx, uint16_t TxData)
 {
-	uint8_t retry=0;				 
-	while((SPIx->SR&SPI_I2S_FLAG_TXE)==0);				//等待发送区空	
+	uint32_t retry=0;
+				
+	while(SPI_I2S_GetFlagStatus(SPIx, SPI_I2S_FLAG_TXE) == RESET)//等待发送区空
 	{
 		retry++;
-		if(retry>200)return -1;
+		if(retry>20000)return -1;
 	}			  
-	SPIx->DR=TxData;	 	  				//发送一个byte 
+	
+	SPI_I2S_SendData(SPIx, TxData);//发送一个byte
+
 	retry=0;
-	while((SPIx->SR&SPI_I2S_FLAG_RXNE)==0); 				//等待接收完一个byte  
+
+	while(SPI_I2S_GetFlagStatus(SPIx, SPI_I2S_FLAG_RXNE) == RESET)//等待接收完一个byte
 	{
 		retry++;
-		if(retry>200)return -1;
-	}  
-	SPIx->DR;						    
+		if(retry>20000)return -1;
+	}
+	
+	SPI_I2S_ReceiveData(SPIx);
 	return 0;          				//返回收到的数据
 }
 /**
@@ -131,20 +136,24 @@ int32_t SPI_WriteByte(SPI_TypeDef* SPIx, uint16_t TxData)
   */
 int32_t SPI_ReadByte(SPI_TypeDef* SPIx, uint16_t *p_RxData)
 {
-	uint8_t retry=0;				 
-	while((SPIx->SR&SPI_I2S_FLAG_TXE)==0);				//等待发送区空	
+	uint32_t retry=0;				 			
+	while(SPI_I2S_GetFlagStatus(SPIx, SPI_I2S_FLAG_TXE) == RESET)//等待发送区空
 	{
 		retry++;
-		if(retry>200)return -1;
+		if(retry>20000)return -1;
 	}			  
-	SPIx->DR=0xFF;	 	  				//发送一个byte 
+			
+	SPI_I2S_SendData(SPIx, 0xFF);//发送一个byte
+	
 	retry=0;
-	while((SPIx->SR&SPI_I2S_FLAG_RXNE)==0); 				//等待接收完一个byte  
+			  
+	while(SPI_I2S_GetFlagStatus(SPIx, SPI_I2S_FLAG_RXNE) == RESET)//等待接收完一个byte
 	{
 		retry++;
-		if(retry>200)return -1;
+		if(retry>20000)return -1;
 	}
-	*p_RxData = SPIx->DR;  						    
+	
+	*p_RxData = SPI_I2S_ReceiveData(SPIx);
 	return 0;          				//返回收到的数据
 }
 /**
@@ -158,22 +167,10 @@ int32_t SPI_ReadByte(SPI_TypeDef* SPIx, uint16_t *p_RxData)
   */
 int32_t SPI_WriteNBytes(SPI_TypeDef* SPIx, uint8_t *p_TxData,uint32_t sendDataNum)
 {
-	uint8_t retry=0;
-	while(sendDataNum--){
-		while((SPIx->SR&SPI_I2S_FLAG_TXE)==0);				//等待发送区空	
-		{
-			retry++;
-			if(retry>20000)return -1;
-		}			  
-		SPIx->DR=*p_TxData++;	 	  				//发送一个byte 
-		retry=0;
-		while((SPIx->SR&SPI_I2S_FLAG_RXNE)==0); 				//等待接收完一个byte  
-		{
-			SPIx->SR = SPIx->SR;
-			retry++;
-			if(retry>20000)return -1;
-		} 
-		SPIx->DR;
+	while(sendDataNum--)
+	{
+		if(SPI_WriteByte(SPIx, *p_TxData++) < 0)
+			return -1;
 	}
 	return 0;
 }
@@ -188,19 +185,9 @@ int32_t SPI_WriteNBytes(SPI_TypeDef* SPIx, uint8_t *p_TxData,uint32_t sendDataNu
   */
 int32_t SPI_ReadNBytes(SPI_TypeDef* SPIx, uint8_t *p_RxData,uint32_t readDataNum)
 {
-	uint8_t retry=0;
 	while(readDataNum--){
-		SPIx->DR = 0xFF;
-		while(!(SPIx->SR&SPI_I2S_FLAG_TXE)){
-			retry++;
-			if(retry>20000)return -1;
-		}
-		retry = 0;
-		while(!(SPIx->SR&SPI_I2S_FLAG_RXNE)){
-			retry++;
-			if(retry>20000)return -1;
-		}
-		*p_RxData++ = SPIx->DR;
+		if(SPI_ReadByte(SPIx, (uint16_t *)p_RxData++) < 0)
+			return -1;
 	}	
 	return 0;
 }

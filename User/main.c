@@ -60,7 +60,7 @@ int main(void)
 	while(1)
 	{
 		delay_ms(10);
-		if(MI_OK==PcdRequest(0x52, Card_Type1))
+		if(MI_OK==PcdRequest(PICC_REQALL, Card_Type1))
 		{
 			uint16_t cardType = (Card_Type1[0]<<8)|Card_Type1[1];
 			printf("Card Type(0x%04X):",cardType);
