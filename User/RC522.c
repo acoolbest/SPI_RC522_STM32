@@ -704,15 +704,45 @@ void RC522_Config(uint8_t Card_Type)
 	}	
 }
 
+/////////////////////////////////////////////////////////////////////
+//功    能：写0块，改写厂商信息，复制卡
+//参数说明: pSnr[IN]:卡片序列号，4字节
+//返    回: 成功返回MI_OK
+/////////////////////////////////////////////////////////////////////
+uint8_t PcdWrite0Block(void)
+{
+	uint8_t Card_Type1[2];
+	uint8_t Card_ID[4];
 
+	uint32_t  unLen;
+	uint8_t ucComMF522Buf[MAXRLEN]; 
+	uint8_t ucComMF522Buf1[MAXRLEN] = {0xa0,0x00,0x5f,0xb1};
+	uint8_t ucComMF522Buf2[MAXRLEN] = {0x00,0xdc,0x44,0x20,0xb8,0x08,0x04,0x00,0x46,0x59,0x25,0x58,0x49,0x10,0x23,0x02};
 
+	if(PcdRequest(PICC_REQALL, Card_Type1) != MI_OK) return MI_ERR;
+	uint16_t cardType = (Card_Type1[0]<<8)|Card_Type1[1];
+	
+	if(cardType == 0x4400 || cardType == 0x0400 || cardType == 0x0200 
+			|| cardType == 0x0800 || cardType == 0x4403)
+	{
+		if(PcdAnticoll(Card_ID) != MI_OK) return MI_ERR;
+		if(PcdSelect(Card_ID) != MI_OK) return MI_ERR;
+		PcdHalt();
+		
+		WriteRawRC(BitFramingReg,0x07);	//发送的最后一个字节的 七位
+		ucComMF522Buf[0] = 0x40;
+		if(PcdComMF522(PCD_TRANSCEIVE,ucComMF522Buf,1,ucComMF522Buf,&unLen) != MI_OK) return MI_ERR;
 
+		WriteRawRC(BitFramingReg,0x00);
+		ucComMF522Buf[0] = 0x43;
+		if(PcdComMF522(PCD_TRANSCEIVE,ucComMF522Buf,1,ucComMF522Buf,&unLen) != MI_OK) return MI_ERR;
 
+		if(PcdComMF522(PCD_TRANSCEIVE,ucComMF522Buf1,4,ucComMF522Buf1,&unLen) != MI_OK) return MI_ERR;
 
+		CalulateCRC(ucComMF522Buf2,16,&ucComMF522Buf2[16]);
+		return PcdComMF522(PCD_TRANSCEIVE,ucComMF522Buf2,18,ucComMF522Buf2,&unLen);
+	}
 
-
-
-
-
-
+	return MI_ERR;
+}
 

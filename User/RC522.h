@@ -1,7 +1,7 @@
 #include "stm32f10x.h"
 
 
-#define RC522_RESET_PIN                 GPIO_Pin_9                /* PB9 */    //   RESET
+#define RC522_RESET_PIN                 GPIO_Pin_0                /* PB0 */    //   RESET
 #define RC522_RESET_GPIO_PORT           GPIOB                     /* GPIOB */
 #define RC522_RESET_GPIO_CLK            RCC_APB2Periph_GPIOB
 #define RC522_RESET_SET()               GPIO_SetBits(RC522_RESET_GPIO_PORT, RC522_RESET_PIN);      //1
@@ -157,11 +157,64 @@ void PcdAntennaOn(void);
 void PcdAntennaOff(void);
 void RC522_Config(uint8_t Card_Type);
 
+//写0块
+/*
+ * 終於讓我找到一篇，他的流程是這樣：
+ * Sent bits: 26 (7 bits) //尋卡 0x26 / 0x52 都可以
+ * Received bits: 04 00
+ * Sent bits: 93 20 //防衝撞
+ * Received bits: 01 23 45 67 00
+ * Sent bits: 93 70 01 23 45 67 00 d0 6f //選卡
+ * Received bits: 08 b6 dd （SAK）
+ * 不可以認證密鑰，不然後門打不開，好，重點來了，
+ * Sent bits: 50 00 57 cd //休眠，50 00 就是 PcdHalt()
+ * Sent bits: 40 (7 bits) （特殊指令）//開後門第一條指令，要設定 BitFramingReg 使 傳送 7 個位元，必須要 7 個
+ * Received bits: a (4 bits)
+ * Sent bits: 43 （特殊指令）//開後門第二條指令
+ * Received bits: 0a
+ * Sent bits: a0 00 5f b1 //正常的寫區塊第一次交握
+ * Received bits: 0a
+ * Sent bits: 00 dc 44 20 b8 08 04 00 46 59 25 58 49 10 23 02 c0 10 //正常的寫 block 0 資料
+ * Received bits: 0a
+ * 重點就是要：
+ * 1. 不可以進行 3 Pass Authenticaiton 
+ * 2. 發 PcdHalt() 
+ * 3. 發 0x40 in 7-bit 
+ * 4. 發 0x43
+ */
+ 
+/*
+ * 解释说明
+ * 首先安照正常S50卡的操作顺序进行 寻卡->防冲撞->选卡 ，
+ * 接下来不要验证密码，然后 休眠。
+ *
+ * 下面发送第一条特殊指令，他是16进制的0x40，必须只发送7位,
+ * 很多朋友就是不清楚这里如何发送0x40以及如何只发送7位，只需要调用下面两个函数就可以了。
+ * Write_MFRC522()或WriteRawRC()
+ * MFRC522_ToCard()或PcdComMF522()
+ * 第一个是设置发送7个位，需要设置BitFramingReg为0x07，
+ * 第二个是写指令函数，不要说你不会调用这两函数，不会的就要好好看下程序中是怎样用到这两函数的。
+ *
+ * 然后发送第二条指令0x43，要发8位，设置BitFramingReg为0x00（好像不设置这个也可以，默认的8位），
+ *
+ * 接下来发送buf[ ]={0xa0,0x00, 0x5f, 0xb1}，
+ * 同样用MFRC522_ToCard()函数
+ *（这串指令我也没懂什么意思，就当做是特殊指令吧，如果有人理解这个可以给我说下），
+ * 这里发送的指令都会应答0x0a（我的好像是0xa0，或许是大小端问题吧），
+ * 如果没收到说明没有弄对，建议一个一个测试。
+ * 通过上述特殊指令后就是写块0了，
+ * 奇怪的是按照上面说的正常写块0，我是没有成功（或许这样是可以的，我看原理都是一样的），
+ * 我还是单独调用的MFRC522_ToCard()函数写块0，上面是18个字节，但是正常的块0是16字节，
+ *
+ * 所以这里有个重点，先把要复制的卡的块0字节读出，
+ * 用CalulateCRC()函数计算出2位校验位放在16字节后面组成18字节一起写入到块0，
+ * 不可以随便填写块0的数据，因为有校验。到此，块0就可以成功写入
+ */
 
-
-
-
-
+/*
+ * https://blog.csdn.net/baidu_34570497/article/details/79689778
+ * http://www.51hei.com/bbs/dpj-85337-1.html
+ */
 
 
 
