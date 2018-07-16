@@ -1,6 +1,6 @@
 #ifndef __DELAY_H
 #define __DELAY_H 			   
-//#include "sys.h"
+#include "stm32f10x_conf.h"
 //////////////////////////////////////////////////////////////////////////////////	 
 //本程序只供学习使用，未经作者许可，不得用于其它任何用途
 //ALIENTEK STM32开发板
@@ -32,8 +32,8 @@
 //在delay_us加入ucos上锁，防止由于ucos打断delay_us的执行，可能导致的延时不准。
 ////////////////////////////////////////////////////////////////////////////////// 	 
 void delay_init(void);
-void delay_ms(uint16_t nms);
-void delay_us(uint32_t nus);
+void delay_ms(u16 nms);
+void delay_us(u32 nus);
 
 #endif
 

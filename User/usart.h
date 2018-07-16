@@ -25,6 +25,10 @@
 void USART_RCC_Configuration(void);
 void USART_GPIO_Configuration(void);
 void USART_Configuration(void);
+void USART1SendString(char *cmd,u16 len);
+void USART1SendByte(uint8_t SendData);
+void USART1SendNByte(uint8_t *cmd,u16 len);
+void u1_printf(char* fmt,...);
 
 #endif /*_usart_H*/
 

@@ -15,6 +15,8 @@
   ******************************************************************************
   */
 /* Includes ------------------------------------------------------------------*/
+#include "string.h"
+#include "stdarg.h"
 #include "usart.h"
 
 /** @addtogroup USART
@@ -121,6 +123,35 @@ PUTCHAR_PROTOTYPE
 /**
   * @}
   */
+void USART1SendByte(uint8_t SendData)
+{	   
+	USART_SendData(USART1,SendData);
+	while(USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);	    
+} 
+void USART1SendString(char *cmd,u16 len)
+{
+	u16 i=0;	
+	while((*(cmd+i)!=0)&&(i<len))
+	{
+		USART1SendByte(*(cmd+i));i++;
+	}
+}
+
+void USART1SendNByte(uint8_t *cmd,u16 len)
+{
+	while(len--)
+		USART1SendByte(*cmd++);
+}
+
+void u1_printf(char* fmt,...) 
+{
+	char buf[256] = {0};
+	va_list ap;
+	va_start(ap,fmt);
+	vsprintf(buf,fmt,ap);
+	va_end(ap);
+	USART1SendString(buf, strlen(buf));
+}
 
 /*********************************END OF FILE**********************************/
 
